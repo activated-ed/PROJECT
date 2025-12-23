@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hotel Finder - Nepal</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- WELCOME POPUP -->
+<div class="welcome-overlay" id="welcomeOverlay">
+    <div class="welcome-box">
+        <h2>Welcome to Hotel Finder — Nepal</h2>
+        <p>Please choose how you want to continue:</p>
+        <div class="welcome-buttons">
+            <button class="btn login-btn" id="loginBtn">Login as User</button>
+            <button class="btn guest-btn" id="guestBtn">Continue as Guest</button>
+        </div>
+    </div>
+</div>
+
+<!-- LOGIN POPUP -->
+<div class="login-overlay" id="loginOverlay">
+    <div class="login-box">
+        <h2>User Login</h2>
+        <form id="loginForm">
+            <input type="text" id="username" placeholder="Username" required>
+            <input type="password" id="password" placeholder="Password" required>
+            <button type="submit" class="login-submit">Login</button>
+        </form>
+    </div>
+</div>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+    <div class="logo">HotelFinder 🇳🇵</div>
+    <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="contact.html">Contact</a></li>
+        <li><a href="register.html">Register </a></li>
+    </ul>
+</nav>
+
+<!-- MAIN CONTENT -->
+<div class="container">
+    <h1>Hotel Finder — Nepal</h1>
+    <p class="subtitle">Search a location (city, neighborhood) and find nearby hotels
+        And drive to your hotel.
+    </p>
+    <div class="search-box">
+        <input 
+        type="text" 
+        id="searchInput"
+        placeholder="Enter district (e.g. Jumla, Ilam)" 
+    >
+    <button onclick="searchHotels()">Search</button>
+    </div>
+
+    <div class="main-layout">
+        <!-- LEFT -->
+        <div class="left-section">
+            
+            <div class="hotels-header"><h2>Nearby Hotels</h2></div>
+
+    <div id="hotelResults"></div>
+        </div>
+
+        <!-- RIGHT -->
+        <div class="right-section">
+            <div class="map-big">
+                <div class="sliding">
+                    <img src="https://wallpaperaccess.com/full/166204.jpg">
+                    <img src="https://www.accessibleadventure.com/uploads/2022/08/ghorepani-poon-hill-sunrise-trek-nepal-1400x500-c.jpg">
+                    <img src="https://th.bing.com/th/id/R.54394d248757d1941d8e6ff8df7c12ef?rik=8ziqshyCIYiVbg&pid=ImgRaw&r=0">
+                    <img src="https://famoustemplesofindia.com/wp-content/uploads/2023/10/Pashupatinath-Temple-1-1024x731.jpg">
+                    <img src="https://static.vecteezy.com/system/resources/previews/002/642/536/large_2x/boudha-stupa-aka-boudhanath-at-kathmandu-nepal-photo.jpg">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const welcomeOverlay = document.getElementById("welcomeOverlay");
+    const loginOverlay = document.getElementById("loginOverlay");
+    const loginBtn = document.getElementById("loginBtn");
+    const guestBtn = document.getElementById("guestBtn");
+
+    // Check if user has already seen popup
+    if(localStorage.getItem("visited")) {
+        welcomeOverlay.style.display = "none";
+    }
+
+    // Login button
+    loginBtn.addEventListener("click", () => {
+        welcomeOverlay.style.display = "none";
+        loginOverlay.style.display = "flex";
+        localStorage.setItem("visited", "true");
+    });
+
+    // Guest button
+    guestBtn.addEventListener("click", () => {
+        welcomeOverlay.style.display = "none";
+        localStorage.setItem("visited", "true");
+    });
+
+    // Optional: Close login after submit
+    document.getElementById("loginForm").addEventListener("submit", e => {
+        e.preventDefault();
+        alert("Login successful!");
+        loginOverlay.style.display = "none";
+    });
+</script>
+<script>
+/* =========================
+   DISTRICT DATA (4 ONLY)
+========================= */
+const districts = [
+  { name: "Jumla", lat: 29.2742, lng: 82.1839 },
+  { name: "Solukhumbu", lat: 27.6981, lng: 86.7297 },
+  { name: "Lamjung", lat: 28.2256, lng: 84.3763 },
+  { name: "Ilam", lat: 26.9086, lng: 87.9260 }
+];
+
+/* =========================
+   REAL HOTEL DATA (20)
+========================= */
+const hotels = [
+  /* -------- J U M L A -------- */
+  
+  {id: 1,
+    name: "Hotel Dautari",
+    district: "Jumla",
+    lat: 29.16361,
+    lng: 82.11082,
+    rating: 3.6,
+    phone: "+977-9851234567",
+    image: "https://lh3.googleusercontent.com/gps-cs-s/AG0ilSzeBf-eIJXAe2wYJOfo2xqndSr3sun7ZpczlNbfuTlcZiHFumzy1axJlzfjK0N0HDCNod9HyhlF2SYCeB99U8VYuAYWCbSxrLzwY37a6MXuoPZ3JYrr01k4XH_M69imOH9PKqVD=w408-h544-k-no",
+    gallery: [
+      "https://maps.app.goo.gl/AYEq5vdxRHVvKFhXA",
+      "",
+      ""
+    ],
+
+    booked: 41,
+    totalRooms: 50
+  },
+  {id: 2,
+    name: "Hotel Snowland Jumla",
+    district: "Jumla",
+    lat: 29.16278,
+    lng: 82.10599,
+    rating: 3.3,
+    phone: "+977-087520188",
+    image:"https://lh3.googleusercontent.com/gps-cs-s/AG0ilSwPwCcI9bUXD-MpANsw4_Smr-TLwGWkDxHQpuQhMyUMIRsEp0iz9LRAeqb99XrZiKunLQp3ATmQNDW-Y76FGtClEgBxCxtJ3Z1e_xxseh3GvI-64w-DgvrxNZgNINuO4r8TjcI=w408-h306-k-no",
+    gallery: [
+      "https://lh3.googleusercontent.com/gps-cs-s/AG0ilSwPwCcI9bUXD-MpANsw4_Smr-TLwGWkDxHQpuQhMyUMIRsEp0iz9LRAeqb99XrZiKunLQp3ATmQNDW-Y76FGtClEgBxCxtJ3Z1e_xxseh3GvI-64w-DgvrxNZgNINuO4r8TjcI=w408-h306-k-no"
+      
+    ],
+
+    booked: 41,
+    totalRooms: 50
+  },
+  {id: 3,
+    name: "Hotel Star",
+    district: "Jumla",
+    lat: 29.2721,
+    lng: 82.1790,
+    rating: 3.8,
+    phone: "+977-087520545",
+    image: "https://lh3.googleusercontent.com/gps-cs-s/AG0ilSw70oG0JgH72S8rh2xVZUiX6Pbrxf995VgcNvO_qSl_yIJvYE6EL1joG3N6mlGWuNchJbYhVTyDVJxl5cn4nEULKHm1NU1c4-qMKkhuFHlt3gE1OpeACXrZLdtsPUTeaJC78a52Bg=w426-h240-k-no",
+    gallery: [
+      "",
+      "",
+      ""
+    ],
+
+    booked: 41,
+    totalRooms: 50
+  },
+  {id: 4,
+    name: "Stay Valley View Resort",
+    district: "Jumla",
+    lat: 29.16361,
+    lng: 82.11082,
+    rating: 3.6,
+    phone: "+977-9858070201",
+    image: "https://lh3.googleusercontent.com/gps-cs-s/AG0ilSy-P_pS6JN3SjmMWDu5ST0nmJ2jQ4Esn4J5geWhG_zhYWweYzlskXrQM8jcQIFS7pJBoFFSdC-RaRbzqbLJiPX5hrs8-wz1dnzUhL9VKY2PmXm22JBZFRixfQSOnjqxA4mLokhu=w408-h306-k-no",
+ gallery: [
+      "",
+      "",
+      ""
+    ],
+
+    booked: 41,
+    totalRooms: 50 },
+
+  /* -------- S O L U K H U M B U -------- */
+  {id: 6,
+    name: "Everest View Hotel",
+    district: "Solukhumbu",
+    lat: 27.81675,
+    lng: 86.72366,
+    rating: 4.4,
+    phone: "+977-038540118",
+    image: "https://lh3.googleusercontent.com/gps-proxy/ALd4DhH3b40Edo9gtKrj95VEP9NratwudlpnTdiuPIrOMwsTkPs2jRyti5kBFIoYHq4gyUH1HHIoc3UlgbthBlKQRwdH9NjIFKENm7TnpKdTbBImUrPNf5t22-0kBB1WJlTg_q3H7jMKPFkS8pZGjZ3mB4HqRXN05tnxlua5uTMuWxk_p-sI0r6SdbdIMtqUIP5pgsyE6EU=w408-h272-k-no",
+     gallery: [
+      "",
+      "",
+      ""
+    ],
+
+    booked: 41,
+    totalRooms: 50},
+  {id: 7,
+    name: "Hotel Sherpa Land",
+    district: "Solukhumbu",
+    lat: 27.80484,
+    lng: 86.710544,
+    rating: 4.3,
+    phone: "+977-9818229968",
+    image: "https://lh3.googleusercontent.com/p/AF1QipNQ6UpnLL4xxKvIKDn0GBq8EZOtBY-GyExTntRt=w408-h272-k-no",
+    gallery: [
+      "",
+      "",
+      ""
+    ],
+
+    booked: 41,
+    totalRooms: 50
+  },
+  {id: 8,
+    name: "Hotel Namche",
+    district: "Solukhumbu",
+    lat: 27.80521,
+    lng: 86.70982,
+    rating: 4.6,
+    phone: "+977-038540004",
+    image: "https://lh3.googleusercontent.com/gps-cs-s/AG0ilSzmo5Dr5Hvg9HNz2hGYZYIcWWQ1XIEiIWXDJDilo7_REsQ4QVDmsw7cL6oLWfvGIwbCklCTXRD5N9iMHiMNmAk6IorKkcNn39aCg5G7UNDjgs8BMMXcvb0i8LZKRWj5zdJdCZeIjg=w426-h240-k-no",
+  gallery: [
+      "",
+      "",
+      ""
+    ],
+
+    booked: 41,
+    totalRooms: 50},
+  {id: 9,
+    name: "Mountain Lodges of Nepal",
+    district: "Solukhumbu",
+    lat: 27.6926,
+    lng: 86.72906,
+    rating: 4.5,
+    phone: "+977-9802348517",
+    image: "https://lh3.googleusercontent.com/p/AF1QipOaBViX2khiZkRZt8kIJgnubYQrabLMcZ8Pg0Ta=w408-h272-k-no",
+    gallery: [
+      "",
+      "",
+      ""
+    ],
+
+    booked: 41,
+    totalRooms: 50
+  },
+  {id: 10,
+    name: "Lama Lodge and Homestay",
+    district: "Solukhumbu",
+    lat: 27.72879,
+    lng: 86.71333,
+    rating: 4.3,
+    phone: "+977-9803828704",
+    image: "https://lh3.googleusercontent.com/p/AF1QipOyoPx3X3dkEfxG3VCgJzSG4SVSOOEQhdueCX5q=w426-h240-k-no",
+     gallery: [
+      "",
+      "",
+      ""
+    ],
+
+    booked: 41,
+    totalRooms: 50},
+
+  /* -------- L A M J U N G -------- */
+  {id: 11,
+    name: "Gateway Himalaya Resort",
+    district: "Lamjung",
+    lat: 28.2349,
+    lng: 84.37598,
+    rating: 4.1,
+    phone: "+977-9856014102",
+    image: "https://lh3.googleusercontent.com/gps-proxy/ALd4DhFU9Iux6D4f7ZsqVh1hbFbjM4bAPN-KDOGoWxC2E8Dll7_GI4vXjDDhd-HQA2cQUDMfgTKXO4iq3Un2FJaULAhN-_7emq8jd4iCoPCiEE5u6v8hmcxDchYSn4hk0IXRBXPezj4haDTNVvC5Kh97VGygTeo5phO39bafDeifq38sh8sirv_oOXzw=w408-h272-k-no",
+  gallery: [
+      "",
+      "",
+      ""
+    ],
+
+    booked: 41,
+    totalRooms: 50},
+  {id: 12,
+    name: "Hotel Riverside Lamjung",
+    district: "Lamjung",
+    lat: 28.29966,
+    lng: 84.38674,
+    rating: 5.0,
+    phone: "+977-9846353430",
+    image: "https://lh3.googleusercontent.com/p/AF1QipNuiUG3iu4KgSdOG3zrwvGvOXBJX8KCjaixLiVl=w425-h240-k-no",
+  gallery: [
+      "",
+      "",
+      ""
+    ],
+
+    booked: 41,
+    totalRooms: 50},
+  {id: 13,
+    name: "Ghalegaun Hotel & Lodge",
+    district: "Lamjung",
+    lat: 28.22785,
+    lng: 84.37727,
+    rating: 4.1,
+    phone: "+977-066520326",
+    image: "https://lh3.googleusercontent.com/gps-cs-s/AG0ilSyhct02BL-ymQeK294o2K6QwuwAeTHySXqpnQiWOg1dcnrwdbI3LGqpaRHoczGTO3RT1na38AbpLtMsO8DDHDOgFfSt77dO4VorriIgpu7H7TWm5cg7j5bHRMZVtCNmKt7VvKw36x3VKayN=w408-h306-k-no",
+  gallery: [
+      "",
+      "",
+      ""
+    ],
+
+    booked: 41,
+    totalRooms: 50},
+  {id: 14,
+    name: "Hotel Tulsi Home",
+    district: "Lamjung",
+    lat: 28.23398,
+    lng: 84.37411,
+    rating: 3.4,
+    phone: "+977-066520141",
+    image: "https://lh3.googleusercontent.com/p/AF1QipPdShDKV511yTeUl8dmyc6Hbv_4vb1RRT7tG6Uj=w408-h306-k-no",
+  gallery: [
+      "",
+      "",
+      ""
+    ],
+
+    booked: 41,
+    totalRooms: 50},
+  {id: 15,
+    name: "Thorong Peak Guest House",
+    district: "Lamjung",
+    lat:  28.2373,
+    lng: 84.37298,
+    rating: 4.1,
+    phone: "+977-9846634266",
+    image: "https://lh3.googleusercontent.com/gps-cs-s/AG0ilSwaOgwfvVr7xHq7CRCNnbtNPAVGgfxRvNQgoG9n1pr71D-iHSFGaHHb0raQR1uXL_4_YyC3hHq9uSWl6iph39MJGpjhS7hKeKkvNThAXW88bc16zfKjkd-HiEwQqei-_86fZLPRyA=w408-h408-k-no",
+ gallery: [
+      "",
+      "",
+      ""
+    ],
+
+    booked: 41,
+    totalRooms: 50 },
+
+  /* -------- I L A M -------- */
+  {id: 16,
+    name: "Ilam Guest House",
+    district: "Ilam",
+    lat: 26.91000,
+    lng: 87.92478,
+    rating: 3.9,
+    phone: "+977-027520854",
+    image: "https://lh3.googleusercontent.com/gps-cs-s/AG0ilSxdMHyGSOTmYtmGZtOSUEI_M7OJeiiQD0IZroXelvPCGLH_AtJEeKjYjf1B2mAzK9PejhLzBo9kKE9iLCxLFGAvVhuWRI3-rF4XqG7caRuBkSXTEpN5TqM1ysEaSLZCZDskISaMMQ=w408-h412-k-no",
+    gallery: [
+      "",
+      "",
+      ""
+    ],
+
+    booked: 41,
+    totalRooms: 50 },
+  {id: 17,
+    name: "Hotel Hill Tower Ilam",
+    district: "Ilam",
+    lat: 27.00711,
+    lng: 88.12031,
+    rating: 4.3,
+    phone: "+977-9842709131",
+    image: "https://lh3.googleusercontent.com/p/AF1QipPQv8aSAcMboWC8GVFrlYFfy7XcwpXwV5OtX0Fn=w408-h408-k-no",
+  gallery: [
+      "",
+      "",
+      ""
+    ],
+
+    booked: 41,
+    totalRooms: 50
+},
+  {id: 18,
+    name: "Hotel Panorama Ilam",
+    district: "Ilam",
+    lat: 26.88528,
+    lng: 88.07464,
+    rating: 3.9,
+    phone: "+977-9842725114",
+    image: "https://lh3.googleusercontent.com/p/AF1QipMf2ADOwpTfitdINelucgsknweoyht0d53fAsl2=w408-h272-k-no",
+    gallery: [
+      "",
+      "",
+      ""
+    ],
+
+    booked: 41,
+    totalRooms: 50
+  },
+  {id: 19,
+    name: "Summit hotel Ilam",
+    district: "Ilam",
+    lat: 26.91162,
+    lng: 87.93001,
+    rating: 4.0,
+    phone: "+977-027520972",
+    image: "https://lh3.googleusercontent.com/p/AF1QipOXtNl9KnA9ROAZay5TE4a_HfYIPA2jowAVQQua=w408-h408-k-no",
+    gallery: [
+      "",
+      "",
+      ""
+    ],
+
+    booked: 41,
+    totalRooms: 50
+  },
+  {id: 20,
+    name: "Hotel Green Carpet Kanyam",
+    district: "Ilam",
+    lat: 26.86498,
+    lng: 88.08375,
+    rating: 4.0,
+    phone: "+977-9842127770",
+    image: "https://lh3.googleusercontent.com/p/AF1QipO0C1tBuQhnrVCFB14jqkGT86SjxP0tI3iTumhc=w408-h306-k-no",
+    gallery: [
+      "",
+      "",
+      ""
+    ],
+
+    booked: 41,
+    totalRooms: 50
+  }
+];
+
+/* =========================
+   DISTANCE CALCULATION
+========================= */
+function getDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1 * Math.PI / 180) *
+    Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) ** 2;
+
+  return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+}
+
+/* =========================
+   SEARCH FUNCTION
+========================= */
+function searchHotels() {
+  const input = document.getElementById("searchInput").value.toLowerCase();
+  const district = districts.find(d => d.name.toLowerCase() === input);
+
+  if (!district) {
+    alert("District not found");
+    return;
+  }
+
+  const results = hotels
+    .filter(h => h.district.toLowerCase() === input)
+    .map(h => ({
+      ...h,
+      distance: getDistance(district.lat, district.lng, h.lat, h.lng)
+    }))
+    .sort((a, b) => a.distance - b.distance);
+
+  displayHotels(results);
+}
+
+/* =========================
+   DISPLAY FUNCTION
+========================= */
+function displayHotels(list) {
+  const container = document.getElementById("hotelResults");
+  container.innerHTML = "";
+
+  list.forEach(h => {
+    container.innerHTML += `
+      <div class="hotel-card" onclick="openHotel(${h.id})">
+
+        <img src="${h.image}" alt="${h.name}">
+        <div>
+          <h3>${h.name}</h3>
+          <p>${h.district}</p>
+          <p>⭐ ${h.rating}</p>
+          <p>${h.distance.toFixed(2)} km away</p>
+        </div>
+      </div>
+    `;
+  });
+}function openHotel(hotelId) {
+  localStorage.setItem("selectedHotelId", hotelId);
+  localStorage.setItem("hotelsData", JSON.stringify(hotels));
+  window.location.href = "hotel.html";
+}
+
+</script>
+
+</body>
+</html>

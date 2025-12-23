@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hotel Details</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f4f4f4;
+}
+
+.hotel-detail-container {
+  display: flex;
+  height: 100vh;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+/* LEFT SIDE */
+.left-side {
+  flex: 1;
+  position: relative;
+}
+
+.main-image {
+  width: 100%;
+  height: 80%;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+.arrows {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.arrows button {
+  font-size: 22px;
+  padding: 10px 15px;
+  margin: 0 10px;
+  cursor: pointer;
+}
+
+/* RIGHT SIDE */
+.right-side {
+  flex: 1;
+  padding: 20px 30px;
+  background: #fff;
+  border-radius: 10px;
+  margin-left: 20px;
+}
+
+.right-side h2 {
+  margin-top: 0;
+}
+
+.right-side p {
+  margin: 10px 0;
+}
+
+.right-side button {
+  padding: 10px 15px;
+  margin-top: 10px;
+  cursor: pointer;
+}
+
+textarea {
+  width: 100%;
+  margin-top: 10px;
+}
+
+.back-btn {
+  position: fixed;
+  top: 15px;
+  left: 15px;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+
+<button class="back-btn" onclick="goBack()">⬅ Back</button>
+
+<div class="hotel-detail-container">
+  <!-- LEFT -->
+  <div class="left-side">
+    <img id="mainImage" class="main-image">
+    <div class="arrows" id="arrowControls">
+      <button onclick="prevImage()">⬅</button>
+      <button onclick="nextImage()">➡</button>
+    </div>
+  </div>
+
+  <!-- RIGHT -->
+  <div class="right-side">
+    <h2 id="hotelName"></h2>
+    <p><strong>Place:</strong> <span id="hotelDistrict"></span></p>
+    <p><strong>Availability:</strong> <span id="hotelAvailability"></span></p>
+    <p>
+  <strong>Call:</strong>
+  <a id="hotelPhone" href="#" style="text-decoration:none; color:black;">📞</a>
+</p>
+
+    <button onclick="showDirections()">Show Directions</button>
+
+    <p><strong>Rating:</strong> ⭐ <span id="hotelRating"></span></p>
+
+    <div class="review-section">
+  <label><strong>Leave a review:</strong></label>
+  <textarea id="reviewText" rows="4" placeholder="Write your review..."></textarea>
+
+  <label><strong>Your Rating:</strong></label>
+  <div class="rating-input">
+    <span class="star" data-value="1">⭐</span>
+    <span class="star" data-value="2">⭐</span>
+    <span class="star" data-value="3">⭐</span>
+    <span class="star" data-value="4">⭐</span>
+    <span class="star" data-value="5">⭐</span>
+  </div>
+
+  <button onclick="submitReview()">Submit Review</button>
+</div>
+  </div>
+</div>
+
+<script>
+const hotels = JSON.parse(localStorage.getItem("hotelsData"));
+const hotelId = parseInt(localStorage.getItem("selectedHotelId"));
+
+const hotel = hotels.find(h => h.id === hotelId);
+
+
+
+
+let currentIndex = 0;
+
+/* =========================
+   LOAD HOTEL DATA
+========================= */
+if (hotel) {
+  document.getElementById("hotelName").innerText = hotel.name;
+  document.getElementById("hotelDistrict").innerText = hotel.district;
+  document.getElementById("hotelRating").innerText = hotel.rating;
+  document.getElementById("hotelAvailability").innerText =
+    `${hotel.totalRooms - hotel.booked} rooms available (${hotel.booked}/${hotel.totalRooms} booked)`;
+    const phoneEl = document.getElementById("hotelPhone");
+phoneEl.innerText = `📞 ${hotel.phone}`;
+phoneEl.href = `tel:${hotel.phone}`;
+
+  document.getElementById("mainImage").src =
+  hotel.gallery && hotel.gallery.length > 0 && hotel.gallery[0]
+    ? hotel.gallery[0]
+    : hotel.image;
+     // Hide arrows if only one image
+  if (!hotel.gallery || hotel.gallery.length <= 1) {
+    document.getElementById("arrowControls").style.display = "none";
+  }
+
+}
+
+/* =========================
+   IMAGE SLIDER
+========================= */
+function nextImage() {
+  currentIndex = (currentIndex + 1) % hotel.gallery.length;
+  document.getElementById("mainImage").src = hotel.gallery[currentIndex];
+}
+
+function prevImage() {
+  currentIndex = (currentIndex - 1 + hotel.gallery.length) % hotel.gallery.length;
+  document.getElementById("mainImage").src = hotel.gallery[currentIndex];
+}
+
+/* =========================
+   GOOGLE MAPS
+========================= */
+function showDirections() {
+  window.open(
+    `https://www.google.com/maps?q=${hotel.lat},${hotel.lng}`,
+    "_blank"
+  );
+}
+let selectedRating = 0;
+
+// Select all stars
+const stars = document.querySelectorAll(".rating-input .star");
+
+// Add click event to each star
+stars.forEach(star => {
+  star.addEventListener("click", () => {
+    selectedRating = star.getAttribute("data-value");
+
+    // Highlight stars
+    stars.forEach(s => {
+      s.classList.toggle("selected", s.getAttribute("data-value") <= selectedRating);
+    });
+  });
+});
+
+function submitReview() {
+  const reviewText = document.getElementById("reviewText").value;
+
+  if (!reviewText && !selectedRating) {
+    alert("Please write a review or select a rating!");
+    return;
+  }
+
+  alert(`Review submitted!\nRating: ${selectedRating} stars\nComment: ${reviewText}`);
+  // Reset
+  document.getElementById("reviewText").value = "";
+  selectedRating = 0;
+  stars.forEach(s => s.classList.remove("selected"));
+}
+
+/* =========================
+   EXTRA
+========================= */
+
+
+function goBack() {
+  window.history.back();
+}
+</script>
+
+</body>
+</html>
